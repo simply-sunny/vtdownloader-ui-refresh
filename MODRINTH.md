@@ -24,6 +24,7 @@ This file is the source of truth for the Modrinth project settings, version meta
 | JAR | Version ID |
 | --- | --- |
 | `vtdownloader-ui-refresh-26.2-1.0.0.jar` | `t04gSK9H` |
+| `vtdownloader-ui-refresh-26.2-1.1.0.jar` | `mCVeQqKP` |
 
 ## Gallery
 

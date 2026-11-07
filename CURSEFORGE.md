@@ -21,6 +21,10 @@ CurseForge projects can't be created through the API, so the project is edited b
 
 Use the images, titles and descriptions from the Gallery table in `MODRINTH.md`. CurseForge names uploads after a UUID, so set each title and description, and feature `list`.
 
+## Files
+
+1.1.0 uploaded 2026-11-06 as file `9486588`.
+
 ---
 
 A new interface for [VTDownloader](https://www.curseforge.com/minecraft/mc-mods/vtdownloader)'s download screen, in Vanilla Tweaks orange on black.
