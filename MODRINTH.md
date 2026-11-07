@@ -17,7 +17,7 @@ This file is the source of truth for the Modrinth project settings, version meta
 | Source | https://github.com/simply-sunny/vtdownloader-ui-refresh |
 | Issues | https://github.com/simply-sunny/vtdownloader-ui-refresh/issues |
 | Wiki | https://simply-sunny.github.io/vtdownloader-ui-refresh/ |
-| Icon | `src/main/resources/assets/vtd_ui_refresh/icon.png`|
+| Icon | `src/main/resources/assets/vtd_ui_refresh/icon.png` |
 
 ## Version metadata
 

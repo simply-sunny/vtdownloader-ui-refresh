@@ -2,8 +2,11 @@
   "name": "VTDownloader UI Refresh",
   "description": "A new interface for VTDownloader's download screen.",
   "repo": "https://github.com/simply-sunny/vtdownloader-ui-refresh",
-  "upstream": "https://github.com/IotaBread/VTDownloader",
   "downloads": {
     "GitHub Releases": "https://github.com/simply-sunny/vtdownloader-ui-refresh/releases"
+  },
+  "coming": {
+    "Modrinth": "2026-11-05",
+    "CurseForge": "2026-11-05"
   }
 }

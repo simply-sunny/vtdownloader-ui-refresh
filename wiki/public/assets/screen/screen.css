@@ -1,7 +1,7 @@
 /* The download screen on a canvas, and a bar of controls under it. */
 .screen{position:relative;min-width:0;margin-block:var(--s2);background:#000;color:var(--muted);font:14px/24px Plex,Arial,sans-serif}
-.screen canvas{display:block;image-rendering:pixelated;box-shadow:0 0 0 1px var(--border);outline:none;touch-action:none;user-select:none;-webkit-user-select:none}
-.screen:not(.is-interactive) canvas{pointer-events:none}
+.screen canvas{display:block;image-rendering:pixelated;outline:none;touch-action:none;user-select:none;-webkit-user-select:none}
+.screen:not(.is-yours) canvas{pointer-events:none}
 .screen.is-too-small canvas,.screen.is-too-small .screen__bar{display:none}
 .screen__notice{margin-bottom:var(--s2);color:var(--foreground)}
 .screen__notice p{margin:0}
@@ -9,8 +9,11 @@
 .screen.is-too-small .screen__notice{margin:0;padding:calc(var(--s2) - 1px);border:1px solid var(--border)}
 .screen canvas:focus-visible{outline:1px solid var(--focus);outline-offset:4px}
 .screen__keys{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;border:0;padding:0;font-size:16px;pointer-events:none}
-.screen__bar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s1) var(--s2);padding:calc(var(--s1) - 1px) var(--s1) var(--s1);border-top:1px solid var(--border)}
+.screen__bar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s1) var(--s2);padding:calc(var(--s1) - 1px) 0 var(--s1);border-top:1px solid var(--border)}
 .screen__note{flex:1;min-width:12em}
 .screen button{font:inherit;color:var(--foreground);background:none;border:1px solid var(--border);border-radius:0;padding:0 calc(var(--s1) - 1px);height:24px;cursor:pointer}
 .screen button:hover{border-color:var(--focus);color:#e0e0e0}
 .screen.is-failed{box-shadow:0 0 0 1px var(--border);padding:var(--s2)}
+.screen:not(.is-live):not(.is-failed){aspect-ratio:16/9}
+.screen__keycap{position:absolute;right:var(--s1);top:var(--s1);padding:2px var(--s1);background:#1e1e1e;color:#fff;border:1px solid #5a5a5a;border-bottom-width:3px;opacity:0;transition:opacity .2s;pointer-events:none}
+.screen__keycap.is-shown{opacity:1}

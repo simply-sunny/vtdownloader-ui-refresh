@@ -45,22 +45,84 @@ function parseColor(c) {
   return m ? (0xFF000000 | +m[1] << 16 | +m[2] << 8 | +m[3]) >>> 0 : ACCENT;
 }
 
-// Monocraft at the game font's size: capitals 7 pixels tall.
+// The game's font, read from its own files the way the game reads them: capitals 7 pixels tall, on a baseline 7 below
+// the text's top. Pulled from Mojang's servers when the page opens; the wiki keeps no copy.
+const FALLBACK = '8px sans-serif';
 const measure = document.createElement('canvas').getContext('2d');
-let fontPx = 8, fontLoad = null;
-function loadFont(url) {
-  return fontLoad ??= new FontFace('Monocraft', `url(${url})`).load().then(face => {
-    document.fonts.add(face);
-    measure.font = '100px Monocraft';
-    fontPx = 700 / (measure.measureText('H').actualBoundingBoxAscent || 70);
-    measure.font = `${fontPx}px Monocraft`;
-  });
+measure.font = FALLBACK;
+const glyphs = new Map([[' ', { advance: 4 }], ['\u200c', { advance: 0 }]]), tints = new Map();
+const decoder = new TextDecoder();
+
+/** One file out of the jar: its local header, then its bytes, inflated if they're deflated. */
+async function entry(jar, [offset, size, method]) {
+  // Busy, the server sometimes answers with the whole jar instead: stop that download and ask again.
+  let res;
+  for (let tries = 0; ; tries++) {
+    const stop = new AbortController();
+    res = await fetch(`${jar}?at=${offset}`, { cache: 'no-store', signal: stop.signal, headers: { Range: `bytes=${offset}-${offset + 30 + 512 + size}` } });
+    if (res.status === 206) break;
+    stop.abort();
+    if (tries >= 3) throw new Error(`range request answered ${res.status}`);
+    await new Promise(done => setTimeout(done, 250 * (tries + 1)));
+  }
+  const buf = new Uint8Array(await res.arrayBuffer()), view = new DataView(buf.buffer);
+  const start = 30 + view.getUint16(26, true) + view.getUint16(28, true), data = buf.subarray(start, start + size);
+  if (method === 0) return data;
+  const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+/** Each sheet's cells become glyphs as wide as their rightmost pixel; the first sheet to have a character keeps it. */
+async function loadFont({ jar, font }) {
+  const files = new Map(await Promise.all(Object.entries(font).map(async ([path, at]) => [path, await entry(jar, at)])));
+  const [table] = [...files.keys()].filter(path => path.endsWith('.json'));
+  const { providers } = JSON.parse(decoder.decode(files.get(table)));
+  for (const { file, chars, ascent, height = 8 } of providers) {
+    const path = `assets/minecraft/textures/${file.replace('minecraft:', '')}`;
+    const sheet = await createImageBitmap(new Blob([files.get(path)], { type: 'image/png' }));
+    const cols = [...chars[0]].length, cw = sheet.width / cols, ch = sheet.height / chars.length, scale = height / ch;
+    const canvas = Object.assign(document.createElement('canvas'), { width: sheet.width, height: sheet.height });
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(sheet, 0, 0);
+    const { data } = ctx.getImageData(0, 0, sheet.width, sheet.height);
+    const inked = (x, y) => { for (let i = 0; i < ch; i++) if (data[((y + i) * sheet.width + x) * 4 + 3]) return true; return false; };
+    chars.forEach((row, j) => [...row].forEach((c, i) => {
+      if (c === '\0' || glyphs.has(c)) return;
+      const sx = i * cw, sy = j * ch;
+      let w = cw;
+      while (w > 0 && !inked(sx + w - 1, sy)) w--;
+      glyphs.set(c, { sheet, sx, sy, sw: w, sh: ch, dw: w * scale, dh: height, top: 7 - ascent, advance: Math.floor(0.5 + w * scale) + 1 });
+    }));
+  }
+}
+/** The game draws what these sheets lack from Unifont, too large to fetch for a few characters: the browser's font stands in. */
+function glyph(c) {
+  let g = glyphs.get(c);
+  if (!g) glyphs.set(c, g = { text: true, advance: Math.ceil(measure.measureText(c).width) });
+  return g;
+}
+/** {@code sheet} in one colour. */
+function tint(sheet, rgb) {
+  let sheets = tints.get(rgb);
+  if (!sheets) tints.set(rgb, sheets = new Map());
+  let canvas = sheets.get(sheet);
+  if (!canvas) {
+    canvas = Object.assign(document.createElement('canvas'), { width: sheet.width, height: sheet.height });
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(sheet, 0, 0);
+    ctx.globalCompositeOperation = 'source-in';
+    ctx.fillStyle = css((0xFF000000 | rgb) >>> 0);
+    ctx.fillRect(0, 0, sheet.width, sheet.height);
+    sheets.set(sheet, canvas);
+  }
+  return canvas;
 }
 const widths = new Map();
 function tw(s) {
   let w = widths.get(s);
   if (w === undefined) {
-    w = Math.round(measure.measureText(s).width);
+    w = 0;
+    for (const c of s) w += glyph(c).advance;
     if (widths.size > 6000) widths.clear();
     widths.set(s, w);
   }
@@ -1086,7 +1148,22 @@ class Graphics {
   constructor(ctx) { this.ctx = ctx; }
   rect(x0, y0, x1, y1, c) { this.ctx.fillStyle = css(c >>> 0); this.ctx.fillRect(x0, y0, x1 - x0, y1 - y0); }
   box(x0, y0, x1, y1, c) { this.rect(x0 + 1, y0, x1 - 1, y1, c); this.rect(x0, y0 + 1, x0 + 1, y1 - 1, c); this.rect(x1 - 1, y0 + 1, x1, y1 - 1, c); }
-  text(s, x, y, c) { if (!s) return; this.ctx.font = `${fontPx}px Monocraft`; this.ctx.fillStyle = css(c >>> 0); this.ctx.fillText(s, x, y + 7); }
+  text(s, x, y, color) {
+    if (!s) return;
+    const c = color >>> 0, rgb = c & 0xFFFFFF, ctx = this.ctx, alpha = ctx.globalAlpha;
+    ctx.globalAlpha = alpha * (c >>> 24) / 255;
+    for (const char of s) {
+      const g = glyph(char);
+      if (g.sheet) ctx.drawImage(tint(g.sheet, rgb), g.sx, g.sy, g.sw, g.sh, x, y + g.top, g.dw, g.dh);
+      else if (g.text) {
+        ctx.font = FALLBACK;
+        ctx.fillStyle = css((0xFF000000 | rgb) >>> 0);
+        ctx.fillText(char, x, y + 7);
+      }
+      x += g.advance;
+    }
+    ctx.globalAlpha = alpha;
+  }
   icon(id, x, y, size) {
     const e = icon(id);
     if (e.ok) this.ctx.drawImage(e.img, x, y, size, size);
@@ -1109,6 +1186,15 @@ class Director {
   constructor(view) { this.view = view; this.run = 0; this.paused = false; }
   get s() { return this.view.screen; }
   caption(text) { this.view.setCaption(text); }
+  /** Shows a key as the script presses it. */
+  keys(text) {
+    const k = this.view.keycap;
+    if (!k) return;
+    k.textContent = text;
+    k.classList.add('is-shown');
+    clearTimeout(k.timer);
+    k.timer = setTimeout(() => k.classList.remove('is-shown'), 900);
+  }
   frame() { return new Promise(r => requestAnimationFrame(r)); }
   async step(run) {
     do {
@@ -1200,8 +1286,9 @@ const SCRIPTS = {
       for (const id of s.category.packs.slice(1, 3).map(p => p.id)) { await d.click(run, s.packPoint(id), 500); await d.wait(run, 200); }
       await d.wait(run, 500);
 
-      d.caption(touch() ? 'Search looks through every category at once.' : `${isMac ? 'Cmd' : 'Ctrl'}+F searches every category at once.`);
+      d.caption(touch() ? 'Search looks through every category at once.' : `${isMac ? 'Cmd' : 'Ctrl'} F searches every category at once.`);
       await d.wait(run, 400);
+      if (!touch()) d.keys(`${isMac ? 'Cmd' : 'Ctrl'} F`);
       s.openSearch(); await d.wait(run, 350);
       await d.type(run, 'honey', 'search');
       await d.wait(run, 500);
@@ -1223,7 +1310,8 @@ const SCRIPTS = {
       if (!touch()) {
         d.caption('Arrow keys move through the packs. Space picks one.');
         await d.wait(run, 400);
-        for (let i = 0; i < 3; i++) { s.moveCursor(0, 1); await d.wait(run, 350); }
+        for (let i = 0; i < 3; i++) { d.keys('↓'); s.moveCursor(0, 1); await d.wait(run, 350); }
+        d.keys('Space');
         s.activateCursor(false);
         await d.wait(run, 700);
         s.cursorShown = false; s.dirty = true;
@@ -1239,7 +1327,7 @@ const SCRIPTS = {
       await d.click(run, s.buttonPoint('back'));
       await d.wait(run, 400);
 
-      d.caption('Installed shows the packs already in your resource pack folder.');
+      d.caption('Installed shows the packs already in your resource packs folder.');
       await d.click(run, s.categoryPoint('Installed'));
       await d.wait(run, 1600);
       await d.click(run, s.categoryPoint('GUI'));
@@ -1276,7 +1364,7 @@ const SCRIPTS = {
       await d.wait(run, 300);
       await d.click(run, s.buttonPoint('download'));
       await d.wait(run, 3700);
-      d.caption(touch() ? 'Now try it. Tap anything.' : 'Now try it. Click anything, or use the arrow keys.');
+      d.caption('Now press Try it.');
       await d.wait(run, 4000);
     }
   },
@@ -1338,9 +1426,12 @@ const SCRIPTS = {
 const OPTS = {
   tour: { target: 500, interactive: true, opts: { selW: 126 } },
   search: { target: 500, label: 'Animation of searching for packs', opts: { hideSide: true, hideSelected: true } },
-  resize: { target: 500, label: 'Animation of resizing and hiding a side panel', minW: NARROW, needs: 'of dragging a side panel', opts: { hideSelected: true, sideW: 90 } },
-  conflict: { target: 500, label: 'Animation of two conflicting packs changing colour', minW: SEL_FIT, needs: 'of the Selected packs panel', opts: { hideSide: true } },
+  resize: { target: 500, label: 'Animation of resizing and hiding a side panel', opts: { hideSelected: true, sideW: 90 } },
+  conflict: { target: 500, label: 'Animation of two conflicting packs changing color', minW: SEL_FIT, needs: 'of the Selected packs panel', opts: { hideSide: true } },
 };
+
+// Under this width a demo says so rather than show a squeezed screen.
+const MIN_WIDTH = 480;
 
 /** Turns a {@code data-screen} element into a live screen. */
 class View {
@@ -1355,7 +1446,6 @@ class View {
     this.interactive = !!conf.interactive;
     root.classList.toggle('is-interactive', this.interactive);
     if (this.interactive) {
-      this.canvas.tabIndex = 0;
       this.canvas.setAttribute('role', 'application');
       this.canvas.setAttribute('aria-label', 'A working copy of the VTDownloader screen');
     } else {
@@ -1375,16 +1465,16 @@ class View {
       const bar = document.createElement('div');
       bar.className = 'screen__bar';
       this.pauseBtn = el('button', 'Pause');
+      this.keycap = el('span', ''); this.keycap.className = 'screen__keycap'; this.keycap.setAttribute('aria-hidden', 'true');
+      root.append(this.keycap);
       this.note = el('span', ''); this.note.className = 'screen__note'; this.note.setAttribute('aria-live', 'off');
-      bar.append(this.pauseBtn, this.note);
-      if (this.interactive) {
-        this.restart = el('button', 'Restart');
-        bar.append(this.restart);
-        this.restart.onclick = () => this.play();
-      }
+      this.restart = el('button', 'Restart');
+      this.tryBtn = el('button', 'Try it');
+      this.tryBtn.onclick = () => this.takeOver();
+      bar.append(...(this.interactive ? [this.pauseBtn, this.tryBtn] : [this.pauseBtn]), this.note, this.restart);
+      this.restart.onclick = () => this.play();
       root.append(bar);
       this.pauseBtn.onclick = () => {
-        if (!this.director.view.scripted) return this.play();
         this.director.paused = !this.director.paused;
         this.pauseBtn.textContent = this.director.paused ? 'Play' : 'Pause';
       };
@@ -1407,15 +1497,23 @@ class View {
 
   begin() {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      if (this.interactive) this.setCaption(touch() ? 'Tap anything.' : 'Click anything. Press ' + (isMac ? 'Cmd' : 'Ctrl') + '+F to search.');
+      if (this.interactive) this.yield();
       else this.setCaptionState('Play');
       return;
     }
     this.play();
   }
 
+  yours() {
+    return touch() ? "It's yours. Tap anything. Nothing downloads." : "It's yours. Click anything, or press " + (isMac ? 'Cmd' : 'Ctrl') + ' F. Nothing downloads.';
+  }
+
   play() {
     this.setCaptionState('Pause');
+    if (this.pauseBtn) this.pauseBtn.hidden = false;
+    if (this.tryBtn) this.tryBtn.hidden = false;
+    this.root.classList.remove('is-yours');
+    this.canvas.removeAttribute('tabindex');
     if (SCRIPTS[this.name]) this.director.start(SCRIPTS[this.name]);
   }
 
@@ -1426,9 +1524,15 @@ class View {
   takeOver() {
     if (!this.director.view.scripted) return;
     this.director.stop();
-    this.setCaptionState('Replay');
-    this.setCaption(touch() ? 'It’s yours. Tap categories and packs, and scroll the list. Nothing downloads.' : 'It’s yours. Drag the panel edges, pick packs, press ' + (isMac ? 'Cmd' : 'Ctrl') + '+F. Nothing downloads.');
+    this.yield();
+  }
+
+  yield() {
+    this.pauseBtn.hidden = this.tryBtn.hidden = true;
+    this.setCaption(this.yours());
     this.root.classList.add('is-yours');
+    this.canvas.tabIndex = 0;
+    this.canvas.focus({ preventScroll: true });
   }
 
   resetScreen() {
@@ -1443,15 +1547,18 @@ class View {
     const dpr = window.devicePixelRatio || 1, dev = Math.round(cssW * dpr);
     const scale = Math.max(1, Math.round(dev / this.conf.target), Math.ceil(1.5 * dpr));
     this.scale = scale;
-    const w = Math.floor(dev / scale);
+    // The screen's outer gap hangs outside the page's column, so the panels line up with the text.
+    const w = Math.floor(dev / scale) + GAP * 2;
     const hero = this.name === 'tour';
     const cap = hero ? Math.floor(innerHeight * .78 * dpr / scale) : Infinity;
-    const h = Math.max(hero ? 170 : 120, Math.min(Math.round(w * (.56)), cap));
+    // On a 24-pixel grid, to match the other wikis' demos.
+    const fitted = Math.floor(cssW * 9 / 16 / 24) * 24 * dpr / scale;
+    const h = Math.max(hero ? 170 : 120, Math.min(Math.floor(fitted), cap));
     this.canvas.width = w * scale;
     this.canvas.height = h * scale;
     this.canvas.style.width = (w * scale / dpr) + 'px';
     this.canvas.style.height = (h * scale / dpr) + 'px';
-    if (w < NARROW && !this.seenNarrow) { this.seenNarrow = true; this.screen.sideHidden = true; this.screen.selHidden = true; }
+    this.canvas.style.marginLeft = (-GAP * scale / dpr) + 'px';
     this.updateNotice(w, scale / dpr);
     this.screen.resize(w, h);
     this.kick();
@@ -1460,21 +1567,20 @@ class View {
 
   /** Says what this display leaves out, so a smaller screen doesn't look like the whole mod. */
   updateNotice(w, cssScale) {
-    const small = w < NARROW || touch();
     const missing = [];
     if (this.interactive) {
-      if (w < NARROW) missing.push('The side panels open one at a time from the arrows, and can’t be resized or hidden.');
-      else if (w < SEL_FIT) missing.push('The Selected packs panel doesn’t fit at this width. The game leaves it out too.');
+      if (w < SEL_FIT) missing.push('The Selected packs panel doesn’t fit at this width. The game leaves it out too.');
       if (touch()) missing.push('Touch can’t drag panel edges, use keyboard shortcuts, or show tooltips.');
     }
-    const tooSmall = !!this.conf.minW && w < this.conf.minW;
+    const narrow = this.root.clientWidth < MIN_WIDTH, tooSmall = narrow || !!this.conf.minW && w < this.conf.minW;
     this.root.classList.toggle('is-too-small', tooSmall);
     this.notice.replaceChildren();
     this.notice.hidden = !missing.length && !tooSmall;
     if (tooSmall) {
-      this.notice.append(el('p', `Not shown on this display. This animation ${this.conf.needs} needs a window at least ${Math.ceil(this.conf.minW * cssScale)} pixels wide.`));
+      this.notice.append(el('p', narrow ? 'Not shown on this display. This demo needs a wider window.'
+        : `Not shown on this display. This animation ${this.conf.needs} needs a window at least ${Math.ceil(this.conf.minW * cssScale)} pixels wide.`));
     } else if (missing.length) {
-      this.notice.append(el('p', small
+      this.notice.append(el('p', touch()
         ? 'This mod runs in Minecraft: Java Edition on a computer. Phones and tablets aren’t supported. This copy of the screen is missing some things here:'
         : 'This window is too narrow for the whole screen:'));
       const list = document.createElement('ul');
@@ -1659,7 +1765,8 @@ export async function mountAll(base) {
   const roots = [...document.querySelectorAll('[data-screen]')];
   if (!roots.length) return;
   try {
-    const [data] = await Promise.all([loadData(base), loadFont(base + 'fonts/Monocraft.otf')]);
+    const data = await loadData(base);
+    await loadFont(data.source);
     widths.clear();
     roots.forEach(r => new View(r, data));
   } catch (e) {
