@@ -1,0 +1,84 @@
+plugins {
+	id 'base'
+	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
+}
+
+// One entry per supported Minecraft version. The code is shared: src/main compiles against each.
+def minecraftTargets = [
+	'26.2': [minecraft: '26.2', java: 25, loader: '0.19.3', fabricApi: '0.157.0+26.2', vtDownloader: 'maven.modrinth:vtdownloader:2.6.0+26.2']
+]
+
+subprojects {
+	def target = minecraftTargets[project.name]
+	if (target == null) {
+		throw new GradleException("Unknown Minecraft target: ${project.path}")
+	}
+
+	apply plugin: 'net.fabricmc.fabric-loom'
+
+	version = rootProject.property('mod_version')
+	group = rootProject.maven_group
+
+	base {
+		archivesName = "${rootProject.archives_base_name}-${target.minecraft}"
+	}
+
+	repositories {
+		maven { url = 'https://api.modrinth.com/maven' }
+	}
+
+	dependencies {
+		minecraft "com.mojang:minecraft:${target.minecraft}"
+		implementation "net.fabricmc:fabric-loader:${target.loader}"
+		implementation "net.fabricmc.fabric-api:fabric-api:${target.fabricApi}"
+
+		// VTDownloader itself: compiled against and loaded by runClient, never bundled.
+		compileOnly target.vtDownloader
+		runtimeOnly target.vtDownloader
+	}
+
+	sourceSets {
+		main {
+			java.setSrcDirs([rootProject.file('src/main/java')])
+			resources.setSrcDirs([rootProject.file('src/main/resources')])
+		}
+	}
+
+	processResources {
+		inputs.property 'version', project.version
+		inputs.property 'minecraft', target.minecraft
+		filesMatching('fabric.mod.json') {
+			expand version: project.version, minecraft: target.minecraft
+		}
+	}
+
+	tasks.withType(JavaCompile).configureEach {
+		options.release = target.java
+	}
+
+	java {
+		withSourcesJar()
+		sourceCompatibility = JavaVersion.toVersion(target.java)
+		targetCompatibility = JavaVersion.toVersion(target.java)
+	}
+
+	jar {
+		inputs.property 'archivesName', project.base.archivesName
+		from(rootProject.files('LICENSE', 'LICENSE-VTDownloader')) {
+			rename { "${it}_${inputs.properties.archivesName}" }
+		}
+	}
+}
+
+tasks.register('buildAll', Sync) {
+	group = 'build'
+	description = 'Builds every supported Minecraft version and collects the release JARs.'
+
+	dependsOn subprojects.collect { it.tasks.named('build') }
+	from subprojects.collect { it.tasks.named('jar') }
+	into layout.buildDirectory.dir('libs')
+}
+
+tasks.named('clean') {
+	dependsOn subprojects.collect { "${it.path}:clean" }
+}

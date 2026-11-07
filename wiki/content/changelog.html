@@ -1,0 +1,29 @@
+<h1>Changelog</h1>
+<h2>1.0.0, 5 November 2026</h2>
+<p>A companion mod, split out of a fork of VTDownloader. It requires VTDownloader 2.6.0 or newer.</p>
+<h3>Changed</h3>
+<ul>
+<li>New look: Vanilla Tweaks orange on black, a vertical category sidebar, and a cleaner reload icon.</li>
+<li>Subcategories: rows after their category's packs, with a few of their icons, or boxes in the grid.</li>
+<li>Descriptions: a list row shows two lines, and a pack's page the rest. Packs have no tooltips. Category warnings show all of their text.</li>
+<li>Popups: the share and error popups draw above the list, with room around the text.</li>
+<li>Category buttons: only the button reacts to the mouse, not the space around it.</li>
+</ul>
+<h3>Added</h3>
+<ul>
+<li>Installed: a row at the bottom of the sidebar lists the packs in the Vanilla Tweaks zips in your resource pack folder. Chips at the top show one zip at a time.</li>
+<li>Keyboard: the arrow keys move over the packs, and Space or Enter selects one. Cmd/Ctrl+1 to 9 open a category. Ctrl+Tab and Ctrl+Shift+Tab move through the sidebar.</li>
+<li>Pack pages: the arrow on a pack opens its preview, animated GIFs included, its whole description in the colours Vanilla Tweaks gives it, and the packs it can't be used with. Previews are kept in <code>cache/vtd_ui_refresh/previews</code>.</li>
+<li>Icon cache: pack icons are kept in <code>cache/vtd_ui_refresh/icons</code>, so they download once per Vanilla Tweaks version.</li>
+<li>Range selection: shift-click selects or deselects every pack from the last one clicked, in the list or the grid.</li>
+<li>Select all: Cmd/Ctrl+A selects every pack in the list, or deselects them if they're all selected. Cmd/Ctrl+Shift+A deselects everything. Neither acts while a text field has focus.</li>
+<li>Search: Cmd/Ctrl+F searches names and descriptions across all categories.</li>
+<li>Side panels: drag either edge to resize, or to the window's edge to hide. An arrow brings a panel back. Widths and hidden state are remembered.</li>
+<li>Back and forward: buttons, Cmd/Ctrl+[ and ], and the mouse's side buttons. Each returns to where the list was scrolled.</li>
+<li>Grid view: a choice of list or tiles, remembered between sessions.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Deselecting the last pack of a subcategory left its category heading in Selected packs, drawn over the next one.</li>
+<li>A crash on warning colours written in hex, like <code>#242423</code>, in the categories Block Outlines and Legacy Console Edition. The new screen reads them. VTDownloader's own screen doesn't.</li>
+</ul>

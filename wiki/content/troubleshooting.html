@@ -1,0 +1,24 @@
+<h1>Troubleshooting</h1>
+<div class="table-wrap"><table><thead><tr><th>Symptom</th><th>Fix</th></tr></thead><tbody>
+<tr><td>The game says this mod requires <code>vt_downloader</code></td><td>Install VTDownloader for the same Minecraft version.</td></tr>
+<tr><td>The screen looks like the original</td><td>Check that this mod's jar is in <code>mods</code> and matches your Minecraft version.</td></tr>
+<tr><td>"There was an error while trying to get the packs."</td><td>Check your connection and that vanillatweaks.net is up, then press the reload button.</td></tr>
+<tr><td>Download stays greyed out</td><td>Select at least one pack, and check the name. The field says what's wrong with it.</td></tr>
+<tr><td>"A file with that name already exists"</td><td>Choose another name, or remove the old pack from your resource packs folder.</td></tr>
+<tr><td>"That file name is a reserved Windows name"</td><td>Choose another name. Names like <code>CON</code> don't work on Windows.</td>
+</tr>
+<tr><td>The Selected packs panel is gone, with no arrow</td><td>The window is under 400 GUI pixels wide. Enlarge it or lower the GUI scale.</td></tr>
+<tr><td>Installed is empty</td><td>It only reads zips and folders made by Vanilla Tweaks, which hold a <code>Selected Packs.txt</code>. Packs downloaded elsewhere don't count.</td></tr>
+<tr><td>An icon looks out of date</td><td>Delete <code>cache/vtd_ui_refresh/icons</code> and open the screen again.</td></tr>
+<tr><td>A pack's page says No preview</td><td>The preview didn't download, or it's a WebP, which the game can't read. Delete <code>cache/vtd_ui_refresh/previews</code> to try again.</td></tr>
+<tr><td>A pack doesn't apply</td><td>Turn it on from the Resource Packs screen. Downloading doesn't enable it.</td></tr>
+</tbody></table></div>
+<p>Errors are in <code>logs/latest.log</code>. <a href="https://github.com/simply-sunny/vtdownloader-ui-refresh/issues">Report it here</a>, or <a href="https://github.com/IotaBread/VTDownloader/issues">upstream</a> if VTDownloader does the same without this mod.</p>
+<h2>Limits</h2>
+<ul>
+<li>VTDownloader sets the Vanilla Tweaks version, when it's built. There's no picker in the game.</li>
+<li>This mod uses VTDownloader's internals, so a new VTDownloader release can need a new build of this mod.</li>
+<li>Resource packs only. Data packs and crafting tweaks aren't available.</li>
+<li>The pack list needs a connection to vanillatweaks.net, and so do icons that aren't cached yet.</li>
+</ul>
+<!-- data-wiki-preserve -->

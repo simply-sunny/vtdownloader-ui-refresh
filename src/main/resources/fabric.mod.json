@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "vtd_ui_refresh",
+	"version": "${version}",
+	"name": "VTDownloader UI Refresh",
+	"description": "A new interface for VTDownloader's download screen. Requires VTDownloader, which does the downloading.",
+	"authors": ["simply-sunny"],
+	"contributors": ["IotaBread and the VTDownloader contributors (original screen code)"],
+	"contact": {
+		"sources": "https://github.com/simply-sunny/vtdownloader-ui-refresh",
+		"issues": "https://github.com/simply-sunny/vtdownloader-ui-refresh/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/vtd_ui_refresh/icon.png",
+	"environment": "client",
+	"mixins": ["vtd_ui_refresh.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~${minecraft}",
+		"java": ">=25",
+		"fabric-api": "*",
+		"vt_downloader": ">=2.6.0"
+	}
+}

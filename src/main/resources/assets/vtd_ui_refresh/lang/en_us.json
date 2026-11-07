@@ -1,0 +1,22 @@
+{
+    "vtd.layout.list": "List view",
+    "vtd.layout.grid": "Grid view",
+    "vtd.search.button": "Search (%s)",
+    "vtd.search.placeholder": "Search all packs...",
+    "vtd.nav.back": "Back",
+    "vtd.nav.forward": "Forward",
+    "vtd.panel.showCategories": "Show categories",
+    "vtd.panel.showSelectedPacks": "Show selected packs",
+    "vtd.search.noResults": "No packs found",
+    "vtd.selectedPacks.empty": "Nothing yet",
+    "vtd.resourcePack.namePlaceholder": "Name your resource pack...",
+    "vtd.installed": "Installed",
+    "vtd.installed.empty": "No Vanilla Tweaks packs in your resource pack folder",
+    "vtd.installed.all": "All",
+    "vtd.subcategory.count": "%s packs",
+    "vtd.details.select": "Select",
+    "vtd.details.deselect": "Deselect",
+    "vtd.details.loading": "Loading preview...",
+    "vtd.details.noPreview": "No preview",
+    "vtd.details.incompatible": "Can't be used with"
+}
