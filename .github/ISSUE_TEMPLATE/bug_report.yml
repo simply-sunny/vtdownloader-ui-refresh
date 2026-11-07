@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Check the [troubleshooting table](https://github.com/simply-sunny/vtdownloader-ui-refresh#troubleshooting) first.
+        Check the [troubleshooting table](https://simply-sunny.github.io/vtdownloader-ui-refresh/troubleshooting.html) first.
   - type: input
     id: minecraft
     attributes:
@@ -44,10 +44,14 @@ body:
   - type: textarea
     id: mods
     attributes:
-      label: Other mods
-      description: Any other mods installed.
+      label: Mods and versions
+      description: Every mod installed, with its version.
+    validations:
+      required: true
   - type: textarea
     id: log
     attributes:
       label: Log or crash report
       description: Attach `logs/latest.log` or the crash report, or paste a link.
+    validations:
+      required: true

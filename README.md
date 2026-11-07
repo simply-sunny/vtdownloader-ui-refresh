@@ -40,9 +40,23 @@ Open Options, then Resource Packs, and click Download VT Resource Pack.
 | Drag a panel's edge | Resize it |
 | Drag a panel's edge to the window's edge | Hide it. An arrow brings it back. |
 
+## Commands
+
+They work on any server. Add `--reload` to any but `list` to apply it straight away: the zip turns on and the game reloads. Tab completes pack ids, and a chat line fits about 12 of them.
+
+| Command | Does |
+| --- | --- |
+| `/vtd list` | Lists your Vanilla Tweaks zips, and which are on. |
+| `/vtd list <zip>` | Lists the packs in a zip. |
+| `/vtd create <zip> <packs>` | Makes a zip from the packs. |
+| `/vtd edit <zip> add <packs>` | Adds packs to a zip. |
+| `/vtd edit <zip> remove <packs>` | Removes packs from a zip. |
+| `/vtd load <zip>` | Turns a zip on. |
+| `/vtd unload <zip>` | Turns a zip off. |
+
 ## Configure
 
-The screen remembers its layout in `config/vtd_ui_refresh.properties`. Delete the file for the defaults.
+The screen remembers its layout in `config/vtd_ui_refresh/config.json`. Delete the file for the defaults.
 
 ## Develop
 

@@ -3,7 +3,6 @@ package mix.vtdrefresh.data;
 import com.mojang.blaze3d.platform.NativeImage;
 import me.bymartrixx.vtd.VTDMod;
 import me.bymartrixx.vtd.data.Pack;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Util;
 
 import java.io.IOException;
@@ -17,8 +16,7 @@ import java.util.concurrent.CompletableFuture;
  * They're kept per Vanilla Tweaks version, which is when the icons can change.
  */
 public final class IconCache {
-    private static final Path DIRECTORY = FabricLoader.getInstance().getGameDir()
-            .resolve("cache").resolve("vtd_ui_refresh").resolve("icons");
+    private static final Path DIRECTORY = ModFiles.cache().resolve("icons");
 
     private IconCache() {
     }

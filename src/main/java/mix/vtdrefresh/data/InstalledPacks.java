@@ -53,7 +53,8 @@ public final class InstalledPacks {
         }, Util.ioPool());
     }
 
-    private static List<String> read(Path path) {
+    /** The pack ids in one zip or folder, empty if it isn't a Vanilla Tweaks pack. */
+    public static List<String> read(Path path) {
         try {
             if (Files.isDirectory(path)) {
                 Path file = path.resolve(Constants.SELECTED_PACKS_FILE);

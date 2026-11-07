@@ -3,7 +3,6 @@ package mix.vtdrefresh.data;
 import com.mojang.blaze3d.platform.NativeImage;
 import me.bymartrixx.vtd.VTDMod;
 import me.bymartrixx.vtd.data.Pack;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Util;
 import org.w3c.dom.Node;
 
@@ -34,8 +33,7 @@ import java.util.concurrent.CompletableFuture;
  * list doesn't say which, so a missing PNG is tried as a GIF. Frames are scaled down, as some are 1920 wide.
  */
 public final class PreviewCache {
-    private static final Path DIRECTORY = FabricLoader.getInstance().getGameDir()
-            .resolve("cache").resolve("vtd_ui_refresh").resolve("previews");
+    private static final Path DIRECTORY = ModFiles.cache().resolve("previews");
     private static final String[] EXTENSIONS = {"png", "gif"};
     /** Wide enough for the list at any sensible size, small enough that a long animation stays a few MB. */
     private static final int MAX_WIDTH = 400;
