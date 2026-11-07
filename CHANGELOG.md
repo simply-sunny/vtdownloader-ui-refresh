@@ -4,6 +4,8 @@ All notable changes to VTDownloader UI Refresh are documented here. This project
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-06
+
 ### Changed
 
 - Everything the mod saves is now in `config/vtd_ui_refresh/`: `config.json` and `cache/`. The layout is JSON instead of properties. Files from older versions move there on launch.
@@ -11,6 +13,11 @@ All notable changes to VTDownloader UI Refresh are documented here. This project
 ### Added
 
 - **Commands:** `/vtd` lists, makes and edits Vanilla Tweaks zips, and turns them on or off. `--reload` applies a change straight away.
+
+## [1.0.0] - 2026-11-05
+
+### Added
+
 - **Companion mod:** the refreshed download screen as its own mod, requiring VTDownloader 2.6.0 or newer. Takes over wherever VTDownloader opens its screen. Remove it to get the original back.
 - **Installed:** a row at the bottom of the sidebar lists the packs in the Vanilla Tweaks zips in your resource pack folder. Chips at the top show one zip at a time.
 - **Keyboard:** the arrow keys move over the packs, and Space or Enter selects one. Cmd/Ctrl+1 to 9 open a category. Ctrl+Tab and Ctrl+Shift+Tab move through the sidebar.
@@ -37,8 +44,6 @@ All notable changes to VTDownloader UI Refresh are documented here. This project
 ### Documentation
 
 - **Release sheets:** `MODRINTH.md` and `CURSEFORGE.md` hold the settings, gallery and listing for each store.
-
-## [1.0.0] - 2026-11-05
 
 ### Fixed
 

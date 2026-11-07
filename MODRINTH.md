@@ -49,6 +49,7 @@ VTDownloader still does the work. Remove this mod and its own screen comes back.
 - Installed packs, by zip
 - Resizable side panels
 - Back, forward and keyboard shortcuts
+- `/vtd` commands to make, edit and turn on packs from chat
 
 ## Installation
 
